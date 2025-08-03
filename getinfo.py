@@ -145,36 +145,13 @@ def filter_data(http_request):
     print("IP Address ::: {}".format(xff))
     get_ip_info(xff)
 
-def port_forwder():
-    print("1\tNgrok\n2\tServeo.net")
-    try:
-        choice = int(input("Enter choice[1/2]:"))
-    except:
-        print("Please enter 1 or 2 only")
-        sys.exit()
-    
-    if choice == 1:
-        print("Getting public url....")
-        port = 4567
-        public_url = urlget.start_ngrok_http(port)
-        if public_url:
-            return public_url
-        else:
-            print("Failed to start ngrok or fetch the public URL.")
-            sys.exit()
-    elif choice == 2:
-        print("Getting public url....")
-        urlget.create_public_connection()
-        time.sleep(7)
-        ng_url = urlget.get_public_url()
-        ng_url = ng_url.replace(" ","")
-        return ng_url
 
 def start_server(redirect_url):
     iha089_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     iha089_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    iha089_server.bind(("localhost", 4567))
-    ng_url = port_forwder()
+    port = 4567
+    iha089_server.bind(("localhost", port))
+    ng_url = urlget.start_cloudflared(port)
     urlmask.urlmasker(ng_url)
     iha089_server.listen(1)
     try:
