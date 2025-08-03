@@ -2,7 +2,7 @@
 Designed to demonstrate how hackers can obtain detailed information about target devices through a simple link, Get-INFO serves as both an educational resource and a wake-up call for the security-conscious.
 
 ## For More Information
-https://iha089.org.in/get-info-get-target-device-information-using-link
+[https://iha089.org/get-info/](https://iha089.org/get-info/)
 
 ![Get-INFO](https://github.com/user-attachments/assets/ada4f78c-3ab8-4835-97e7-03438ffa9c6d)
 
