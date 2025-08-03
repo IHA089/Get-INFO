@@ -1,60 +1,35 @@
 import subprocess
-import os
+import re
 import sys
-from time import sleep
 
-def start_ngrok_http(port=80):
-
+def start_cloudflared(port):
     try:
-        ngrok_path = os.path.join(os.getcwd(), "ngrok")
-
-        if not os.path.isfile(ngrok_path):
-            raise FileNotFoundError("Ngrok executable not found in the current directory.")
-
+        # Start the cloudflared tunnel process
         process = subprocess.Popen(
-            [ngrok_path, "http", str(port)],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-
-        sleep(4)
-
-        result = subprocess.run(
-            ["curl", "-s", "http://localhost:4040/api/tunnels"],
-            capture_output=True,
+            ['cloudflared', 'tunnel', '--url', f'http://localhost:{port}'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True
         )
 
-        if result.returncode != 0:
-            raise Exception("Failed to fetch tunnel details from ngrok API.")
+        # Wait and read output line by line
+        public_url = None
+        for line in process.stdout:
+            # Look for the public URL in output
+            match = re.search(r'https://[a-zA-Z0-9\-]+\.trycloudflare\.com', line)
+            if match:
+                public_url = match.group(0)
+                return public_url
+                break
 
-        tunnels = json.loads(result.stdout)
-        for tunnel in tunnels.get("tunnels", []):
-            if tunnel.get("proto") == "https":
-                return tunnel.get("public_url")
+        if not public_url:
+            print("Public URL not found.")
+            process.terminate()
+            sys.exit()
 
-        raise Exception("No HTTPS tunnel found.")
-
+    except FileNotFoundError:
+        print("cloudflared is not installed or not in PATH.")
+        sys.exit()
     except Exception as e:
         print(f"Error: {e}")
-        return None
-
-def create_public_connection():
-    file = "forward.txt"
-    command = "ssh -R 80:0.0.0.0:4567 serveo.net -y > {} &".format(file)
-    subprocess.Popen(command, shell=True)
-
-def get_public_url():
-    ffile = "forward.txt"
-    file = open(ffile, 'r')
-    read_data = file.read()
-    os.remove(ffile)
-    file.close()
-    new_data = read_data.replace("Forwarding HTTP traffic from", "")
-    new_data = new_data.replace("\n","")
-    new_data = new_data.replace("\r","")
-    if new_data == "":
-        print("Please restart.....")
         sys.exit()
-    else:
-        return new_data
